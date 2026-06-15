@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 import joblib
 
 # Page config
@@ -47,20 +48,26 @@ st.divider()
 
 # Predict button
 if st.button('🔮 Predict House Value', use_container_width=True):
-    input_data = np.array([[
+
+    # --- FIX: use a DataFrame with column names matching training ---
+    input_data = pd.DataFrame([[
         longitude, latitude, housing_median_age,
-        households, median_income, rooms_per_household,
-        bedrooms_per_room, population_per_household
-    ]])
-    
+        households, median_income,
+        rooms_per_household, bedrooms_per_room, population_per_household
+    ]], columns=[
+        'longitude', 'latitude', 'housing_median_age',
+        'households', 'median_income',
+        'rooms_per_household', 'bedrooms_per_room', 'population_per_household'
+    ])
+
     input_imputed = imputer.transform(input_data)
     input_scaled  = scaler.transform(input_imputed)
-    
+
     log_pred = model.predict(input_scaled)
     price    = np.expm1(log_pred)[0]
-    
+
     st.success(f'### Predicted Median House Value: **${price:,.2f}**')
-    
+
     col1, col2, col3 = st.columns(3)
     col1.metric('Prediction', f'${price:,.0f}')
     col2.metric('Model', 'XGBoost')
