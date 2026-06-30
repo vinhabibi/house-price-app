@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>California Housing Price Prediction — Pipeline | Vincent Kimutai</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/iconfont/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#f0f0f0;min-height:100vh;padding:24px}
+.wrap{max-width:800px;margin:0 auto}
+.head{text-align:center;margin-bottom:22px}
+.head h1{font-size:17px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#d4a54a;margin-bottom:6px}
+.head p{font-size:12px;color:#888}
+.canvas-scroll{overflow:hidden}
+.canvas{position:relative;width:790px;height:300px;margin:0 auto;transform-origin:top center}
+.grid-bg{position:absolute;inset:0;border-radius:12px;background-image:radial-gradient(#2a2a2a 1px,transparent 1px);background-size:18px 18px;background-color:#141414}
+.nnode{position:absolute;background:#262626;border:1px solid #3a3a3a;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;z-index:2}
+.nnode.agent{background:#2a2a2a;border-color:#444}
+.nicon{width:32px;height:32px;border-radius:7px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:16px;color:#d4a54a;flex-shrink:0}
+.ntitle{font-size:12px;font-weight:600;color:#f0f0f0}
+.nsub{font-size:10px;color:#888;margin-top:1px}
+.nmetric{font-size:10px;color:#5dcaa5;margin-top:1px;font-weight:600}
+.line{position:absolute;height:1px;background:#444;z-index:1}
+.port{position:absolute;width:7px;height:7px;border-radius:50%;background:#555;border:1px solid #777;z-index:2}
+.dline{position:absolute;width:1px;background:repeating-linear-gradient(#555 0 4px,transparent 4px 8px);z-index:1}
+.snode{position:absolute;width:44px;height:44px;border-radius:50%;background:#1a1a1a;border:1px solid #3a3a3a;display:flex;align-items:center;justify-content:center;font-size:17px;color:#7fb3e8;z-index:2}
+.slabel{position:absolute;font-size:10px;color:#999;text-align:center;width:90px;z-index:2}
+.smetric{position:absolute;font-size:9px;color:#5dcaa5;text-align:center;width:90px;font-weight:600;z-index:2}
+.endplus{position:absolute;width:26px;height:26px;border-radius:6px;border:1px dashed #444;display:flex;align-items:center;justify-content:center;color:#666;font-size:13px;z-index:2;text-decoration:none}
+.live-tag{display:block;text-align:center;font-size:11px;color:#7fb3e8;margin-top:10px}
+.live-tag a{color:#7fb3e8;text-decoration:none;font-weight:600}
+
+.panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:30px}
+.panel-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#d4a54a;margin-bottom:8px}
+.panel-text{font-size:12px;color:#bbb;line-height:1.6}
+.panel-text em{font-style:normal;color:#ddd}
+
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.tag{font-size:11px;padding:4px 12px;border-radius:20px;background:#1f2e42;color:#4a9de0;border:1px solid #2a4060}
+
+.footer{margin-top:26px;text-align:center;font-size:11px;color:#555}
+.footer a{color:#d4a54a;text-decoration:none}
+
+@media (max-width:600px){
+  body{padding:14px}
+  .panels{grid-template-columns:1fr;gap:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>California Housing Price Prediction</h1>
+    <p>Training pipeline · XGBoost tuned via GridSearchCV · deployed on Streamlit</p>
+  </div>
+
+  <div class="canvas-scroll" id="canvasFrame">
+  <div class="canvas" id="canvasInner">
+    <div class="grid-bg"></div>
+
+    <div class="line" style="left:180px;top:131px;width:30px"></div>
+    <div class="port" style="left:178px;top:127px"></div>
+    <div class="port" style="left:208px;top:127px"></div>
+
+    <div class="line" style="left:400px;top:131px;width:30px"></div>
+    <div class="port" style="left:398px;top:127px"></div>
+    <div class="port" style="left:428px;top:127px"></div>
+
+    <div class="line" style="left:580px;top:131px;width:30px"></div>
+    <div class="port" style="left:578px;top:127px"></div>
+    <div class="port" style="left:608px;top:127px"></div>
+
+    <div class="line" style="left:760px;top:131px;width:18px"></div>
+    <div class="port" style="left:758px;top:127px"></div>
+
+    <div class="dline" style="left:285px;top:170px;height:55px"></div>
+    <div class="dline" style="left:225px;top:170px;height:55px;transform:rotate(-18deg);transform-origin:top"></div>
+    <div class="dline" style="left:345px;top:170px;height:55px;transform:rotate(18deg);transform-origin:top"></div>
+
+    <div class="nnode" style="left:30px;top:90px;width:150px">
+      <div class="nicon"><i class="ti ti-home" aria-hidden="true"></i></div>
+      <div class="ntext"><div class="ntitle">Real estate data</div><div class="nsub">CA Housing, ~17K rows</div></div>
+    </div>
+
+    <div class="nnode agent" style="left:210px;top:84px;width:190px">
+      <div class="nicon"><i class="ti ti-cpu" aria-hidden="true"></i></div>
+      <div class="ntext"><div class="ntitle">XGBoost regressor</div><div class="nsub">Tuned via GridSearchCV</div></div>
+    </div>
+
+    <div class="nnode" style="left:430px;top:90px;width:150px">
+      <div class="nicon"><i class="ti ti-chart-bar" aria-hidden="true"></i></div>
+      <div class="ntext"><div class="ntitle">Evaluate</div><div class="nmetric">R&#178; 0.7488</div></div>
+    </div>
+
+    <div class="nnode" style="left:610px;top:84px;width:150px">
+      <div class="nicon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
+      <div class="ntext"><div class="ntitle">Deploy</div><div class="nsub">Live on Streamlit</div></div>
+    </div>
+
+    <a class="endplus" href="https://house-price-app-clttagjlmr725cmyy28c7c.streamlit.app/" target="_blank" style="left:782px;top:121px"><i class="ti ti-external-link" aria-hidden="true"></i></a>
+
+    <div class="snode" style="left:197px;top:225px">
+      <div class="sicon"><i class="ti ti-scale" aria-hidden="true"></i></div>
+    </div>
+    <div class="slabel" style="left:152px;top:272px">Baseline models</div>
+    <div class="smetric" style="left:152px;top:285px">RF R&#178; 0.759</div>
+
+    <div class="snode" style="left:267px;top:225px">
+      <div class="sicon"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></div>
+    </div>
+    <div class="slabel" style="left:222px;top:272px">GridSearchCV</div>
+    <div class="smetric" style="left:222px;top:285px">80 fits, 5-fold</div>
+
+    <div class="snode" style="left:337px;top:225px">
+      <div class="sicon"><i class="ti ti-report-analytics" aria-hidden="true"></i></div>
+    </div>
+    <div class="slabel" style="left:292px;top:272px">Error metrics</div>
+    <div class="smetric" style="left:292px;top:285px">MAE $31.4K</div>
+  </div>
+  </div>
+
+  <p class="live-tag">Try it live -> <a href="https://house-price-app-clttagjlmr725cmyy28c7c.streamlit.app/" target="_blank">open the live Streamlit app</a></p>
+
+  <div class="panels">
+    <div>
+      <div class="panel-title">What I learnt</div>
+      <div class="panel-text">The target distribution was right-skewed and artificially capped at $500,000, so I removed those rows and applied a log transform before modelling. I also learnt that raw count features such as total rooms and population carry less signal than per-household ratios, and that fitting the imputer and scaler on the training split only is what gives an honest read on generalisation.</div>
+    </div>
+    <div>
+      <div class="panel-title">Impact</div>
+      <div class="panel-text">Tuning XGBoost with 5-fold GridSearchCV over depth, learning rate, and subsample produced the best result across all models tested, reaching an R&#178; of 0.7488 with a mean absolute error of roughly $31,400. The model and its preprocessing steps were packaged into a working Streamlit app, taking the project from notebook to a live, user-facing tool.</div>
+    </div>
+    <div>
+      <div class="panel-title">Skills gained</div>
+      <div class="panel-text">Regression modelling and evaluation, feature engineering from raw housing counts, leakage-safe preprocessing pipelines, hyperparameter tuning with GridSearchCV, model serialisation with joblib, and deployment of a trained model as a live Streamlit application.</div>
+    </div>
+  </div>
+
+  <div class="tags">
+    <span class="tag">XGBoost</span>
+    <span class="tag">Real Estate</span>
+    <span class="tag">Streamlit</span>
+    <span class="tag">Scikit-learn</span>
+  </div>
+
+  <div class="footer">
+    <p>Built by <a href="https://vinhabibi.github.io/vincent-kimutai/" target="_blank">Vincent Kimutai</a> &middot; GitHub: <a href="https://github.com/vinhabibi" target="_blank">vinhabibi</a></p>
+  </div>
+</div>
+<script>
+function fitCanvas(){
+  var frame = document.getElementById('canvasFrame');
+  var inner = document.getElementById('canvasInner');
+  var scale = Math.min(1, frame.clientWidth / 790);
+  inner.style.transform = 'scale(' + scale + ')';
+  frame.style.height = (300 * scale) + 'px';
+}
+window.addEventListener('resize', fitCanvas);
+window.addEventListener('load', fitCanvas);
+fitCanvas();
+</script>
+</body>
+</html>
